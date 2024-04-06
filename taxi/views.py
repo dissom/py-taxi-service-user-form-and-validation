@@ -1,8 +1,11 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse, reverse_lazy
 from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
+
+from taxi.forms import CarCreateForm, DriverCreationForm, DriverLicenseUpdateForm
 
 from .models import Driver, Car, Manufacturer
 
@@ -64,7 +67,8 @@ class CarDetailView(LoginRequiredMixin, generic.DetailView):
 
 class CarCreateView(LoginRequiredMixin, generic.CreateView):
     model = Car
-    fields = "__all__"
+    form_class = CarCreateForm
+    # fields = "__all__"
     success_url = reverse_lazy("taxi:car-list")
 
 
@@ -87,3 +91,44 @@ class DriverListView(LoginRequiredMixin, generic.ListView):
 class DriverDetailView(LoginRequiredMixin, generic.DetailView):
     model = Driver
     queryset = Driver.objects.all().prefetch_related("cars__manufacturer")
+
+
+class DriverCreatelView(LoginRequiredMixin, generic.CreateView):
+    model = Driver
+    form_class = DriverCreationForm
+    success_url = reverse_lazy("taxi:driver-list")
+
+
+class DriverDeletelView(LoginRequiredMixin, generic.DeleteView):
+    model = Driver
+    success_url = reverse_lazy("taxi:driver-list")
+
+
+def license_update(request: HttpRequest, driver_id: int) -> HttpResponse:
+    driver = get_object_or_404(Driver, pk=driver_id)
+
+    if request.method == "POST":
+        form = DriverLicenseUpdateForm(request.POST, instance=driver)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(
+                reverse("taxi:driver-detail", kwargs={"pk": driver_id})
+            )
+    else:
+        form = DriverLicenseUpdateForm(instance=driver)
+    context = {"form": form}
+    return render(request, "taxi/license_update.html", context=context)
+
+
+@login_required
+def assign_to_car(request: HttpRequest, pk: int) -> HttpResponse:
+    car = get_object_or_404(Car, pk=pk)
+    car.drivers.add(request.user)
+    return HttpResponseRedirect(reverse("taxi:car-detail", kwargs={"pk": pk}))
+
+
+@login_required
+def delete_from_car(request: HttpRequest, pk: int) -> HttpResponse:
+    car = get_object_or_404(Car, pk=pk)
+    car.drivers.remove(request.user)
+    return HttpResponseRedirect(reverse("taxi:car-list", kwargs={"pk": pk}))
