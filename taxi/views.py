@@ -1,11 +1,15 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from taxi.forms import CarCreateForm, DriverCreationForm, DriverLicenseUpdateForm
+from taxi.forms import (
+    CarCreateForm,
+    DriverCreationForm,
+    DriverLicenseUpdateForm
+)
 
 from .models import Driver, Car, Manufacturer
 
@@ -68,13 +72,12 @@ class CarDetailView(LoginRequiredMixin, generic.DetailView):
 class CarCreateView(LoginRequiredMixin, generic.CreateView):
     model = Car
     form_class = CarCreateForm
-    # fields = "__all__"
     success_url = reverse_lazy("taxi:car-list")
 
 
 class CarUpdateView(LoginRequiredMixin, generic.UpdateView):
     model = Car
-    fields = "__all__"
+    form_class = CarCreateForm
     success_url = reverse_lazy("taxi:car-list")
 
 
@@ -96,28 +99,45 @@ class DriverDetailView(LoginRequiredMixin, generic.DetailView):
 class DriverCreatelView(LoginRequiredMixin, generic.CreateView):
     model = Driver
     form_class = DriverCreationForm
+    template_name = "taxi/driver_form.html"
+    success_url = reverse_lazy("taxi:driver-list")
+
+
+class DriverUpdatelView(LoginRequiredMixin, generic.UpdateView):
+    model = Driver
+    form_class = DriverCreationForm
+    template_name = "taxi/driver_form.html"
     success_url = reverse_lazy("taxi:driver-list")
 
 
 class DriverDeletelView(LoginRequiredMixin, generic.DeleteView):
     model = Driver
+    template_name = "taxi/driver_confirm_delete.html"
     success_url = reverse_lazy("taxi:driver-list")
 
 
-def license_update(request: HttpRequest, driver_id: int) -> HttpResponse:
-    driver = get_object_or_404(Driver, pk=driver_id)
+@login_required
+def license_update(request: HttpRequest, pk: int) -> HttpResponse:
+    driver = get_object_or_404(Driver, pk=pk)
+    # driver = Driver.objects.get(pk=pk)
 
     if request.method == "POST":
         form = DriverLicenseUpdateForm(request.POST, instance=driver)
         if form.is_valid():
             form.save()
+            print("Form is valid!")
+            print(form.errors)
+
             return HttpResponseRedirect(
-                reverse("taxi:driver-detail", kwargs={"pk": driver_id})
+                reverse("taxi:driver-detail", kwargs={"pk": pk})
             )
+
+        print("Form is invalid!")
+        print(form.errors)
     else:
         form = DriverLicenseUpdateForm(instance=driver)
     context = {"form": form}
-    return render(request, "taxi/license_update.html", context=context)
+    return render(request, "taxi/license_form.html", context=context)
 
 
 @login_required
