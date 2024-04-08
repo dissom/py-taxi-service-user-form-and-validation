@@ -101,9 +101,17 @@ urlpatterns = [
         name="driver-detail"
     ),
     # path("cars/<int:pk>/assign/", assign_to_car, name="assign-to-car"),
-    path("cars/<int:pk>/assign/", AssignToCarView.as_view(), name="assign-to-car"),
+    path(
+        "cars/<int:pk>/assign/",
+        AssignToCarView.as_view(),
+        name="assign-to-car"
+    ),
     # path("cars/<int:pk>/delete/", delete_from_car, name="delete-from-car")
-    path("cars/<int:pk>/delete/", DeleteFromCarView.as_view(), name="delete-from-car")
+    path(
+        "cars/<int:pk>/delete/",
+        DeleteFromCarView.as_view(),
+        name="delete-from-car"
+    )
 ]
 
 app_name = "taxi"
