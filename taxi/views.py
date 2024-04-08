@@ -113,13 +113,6 @@ class DriverCreatelView(LoginRequiredMixin, generic.CreateView):
         )
 
 
-# class DriverUpdatelView(LoginRequiredMixin, generic.UpdateView):
-#     model = Driver
-#     form_class = DriverCreationForm
-#     # template_name = "taxi/driver_form.html"
-#     # success_url = reverse_lazy("taxi:driver-detail")
-
-
 class DriverDeletelView(LoginRequiredMixin, generic.DeleteView):
     model = Driver
     success_url = reverse_lazy("taxi:driver-list")
@@ -130,25 +123,15 @@ class DriverLicenseUpdateView(LoginRequiredMixin, generic.UpdateView):
     form_class = DriverLicenseUpdateForm
 
 
-class AssignToCarView(LoginRequiredMixin, generic.View):
+class CarActionView(LoginRequiredMixin, generic.View):
     model = Car
 
-    def post(self, request, pk):
+    def post(self, request, pk) -> HttpResponseRedirect:
         car = get_object_or_404(Car, pk=pk)
-        car.drivers.add(request.user)
-        return HttpResponseRedirect(
-            reverse(
-                "taxi:car-detail", kwargs={"pk": pk}
-            )
-        )
-
-
-class DeleteFromCarView(LoginRequiredMixin, generic.View):
-    model = Car
-
-    def post(self, request, pk):
-        car = get_object_or_404(Car, pk=pk)
-        car.drivers.remove(request.user)
+        if request.user in car.drivers.all():
+            car.drivers.remove(request.user)
+        else:
+            car.drivers.add(request.user)
         return HttpResponseRedirect(
             reverse(
                 "taxi:car-detail", kwargs={"pk": pk}
