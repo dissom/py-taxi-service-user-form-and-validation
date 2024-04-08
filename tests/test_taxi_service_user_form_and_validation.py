@@ -45,7 +45,6 @@ class DriverViewsTest(TestCase):
             reverse("taxi:driver-update", kwargs={"pk": self.user.id}),
             data={"license_number": test_license_number},
         )
-        print(response)
         self.assertEqual(response.status_code, 302)
 
     def test_update_driver_license_number_with_not_valid_data(self):
