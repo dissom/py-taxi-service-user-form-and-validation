@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views import generic
@@ -11,6 +11,7 @@ from taxi.forms import (
     DriverCreationForm,
     DriverLicenseUpdateForm
 )
+
 from .models import Driver, Car, Manufacturer
 
 
@@ -99,8 +100,6 @@ class DriverDetailView(LoginRequiredMixin, generic.DetailView):
 class DriverCreatelView(LoginRequiredMixin, generic.CreateView):
     model = Driver
     form_class = DriverCreationForm
-    # template_name = "taxi/driver_form.html"
-    # success_url = reverse_lazy("taxi:driver-list")
 
     def form_valid(self, form):
         self.object = form.save()
@@ -114,25 +113,21 @@ class DriverCreatelView(LoginRequiredMixin, generic.CreateView):
         )
 
 
-class DriverUpdatelView(LoginRequiredMixin, generic.UpdateView):
-    model = Driver
-    form_class = DriverCreationForm
-    # template_name = "taxi/driver_form.html"
-    # success_url = reverse_lazy("taxi:driver-detail")
+# class DriverUpdatelView(LoginRequiredMixin, generic.UpdateView):
+#     model = Driver
+#     form_class = DriverCreationForm
+#     # template_name = "taxi/driver_form.html"
+#     # success_url = reverse_lazy("taxi:driver-detail")
 
 
 class DriverDeletelView(LoginRequiredMixin, generic.DeleteView):
     model = Driver
-    # form_class = DriverCreationForm
-    # template_name = "taxi/driver_confirm_delete.html"
     success_url = reverse_lazy("taxi:driver-list")
 
 
 class DriverLicenseUpdateView(LoginRequiredMixin, generic.UpdateView):
-    # model = Driver
     model = get_user_model()
     form_class = DriverLicenseUpdateForm
-    # template_name = "taxi/license_form.html"
 
 
 class AssignToCarView(LoginRequiredMixin, generic.View):
@@ -143,14 +138,9 @@ class AssignToCarView(LoginRequiredMixin, generic.View):
         car.drivers.add(request.user)
         return HttpResponseRedirect(
             reverse(
-                "taxi:car-detail",
-                kwargs={"pk": pk}
+                "taxi:car-detail", kwargs={"pk": pk}
             )
         )
-
-    # def get(self, request, pk):
-    #     car = get_object_or_404(Car, pk=pk)
-    #     return render(request, self.template_name, {'car': car})
 
 
 class DeleteFromCarView(LoginRequiredMixin, generic.View):
